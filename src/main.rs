@@ -2,6 +2,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::fs;
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug)]
 struct Token {
@@ -14,7 +15,7 @@ impl fmt::Display for Token {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Atom {
     Symbol(String),
     Keyword(String),
@@ -50,6 +51,24 @@ impl Atom {
         }
 
         Some(Atom::Symbol(src))
+    }
+}
+
+impl PartialEq for Atom {
+    fn eq(&self, other: &Atom) -> bool {}
+}
+
+impl Hash for Atom {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Atom::Boolean(f) => f.to_string().hash(state),
+            Atom::Float(f) => f.to_string().hash(state),
+            Atom::Int(f) => f.to_string().hash(state),
+            Atom::Keyword(f) => f.to_string().hash(state),
+            Atom::Reference(f) => f.to_string().hash(state),
+            Atom::String(f) => f.to_string().hash(state),
+            Atom::Symbol(f) => f.to_string().hash(state),
+        }
     }
 }
 
@@ -189,32 +208,64 @@ impl AST {
     }
 }
 
-struct ENV {}
+struct ENV {
+    vars: HashMap<Atom, Atom>,
+}
 
-fn eval(ast: &AST, pc: usize) {
-    let reference = pc;
-    let mut pc: usize = pc;
-    while ast.items.len() > pc {
-        if let Some(sexp) = ast.items.get(&pc) {
-            println!("{} {}", pc, sexp);
-            for atom in &sexp.children {
-                match atom {
-                    Atom::Reference(n) => {
-                        if n > &pc {
-                            pc = n + 1;
-                        }
-                        eval(&ast, n.clone());
-                    }
-                    _atom => {}
-                }
-            }
-            if pc == reference {
-                return;
-            }
-            pc += 1;
+impl ENV {
+    fn new() -> ENV {
+        ENV {
+            vars: HashMap::new(),
         }
     }
 }
+
+fn eval(ast: &AST, env: &mut ENV, pc: usize) -> usize {
+    let mut max_pc: usize = pc;
+    if let Some(sexp) = ast.items.get(&pc) {
+        println!("{}", sexp);
+        for atom in &sexp.children {
+            match atom {
+                Atom::Reference(n) => {
+                    if n > &max_pc {
+                        max_pc = *n;
+                    }
+                    let local_max = eval(&ast, &mut env, n.clone());
+                    if local_max > max_pc {
+                        max_pc = local_max;
+                    }
+                }
+                _atom => {}
+            }
+        }
+    }
+    max_pc
+}
+
+// fn eval(ast: &AST, pc: usize) {
+//     let reference = pc;
+//     let mut pc: usize = pc;
+//     while ast.items.len() > pc {
+//         if let Some(sexp) = ast.items.get(&pc) {
+//             println!("{} {}", pc, sexp);
+//             for atom in &sexp.children {
+//                 match atom {
+//                     Atom::Reference(n) => {
+//                         if n > &pc {
+//                             pc = n + 1;
+//                         }
+//                         eval(&ast, n.clone());
+//                     }
+//                     _atom => {}
+//                 }
+//             }
+//             if pc == reference {
+//                 return;
+//             }
+//             pc += 1;
+//         }
+//     }
+// }
 
 fn main() {
     let contents = fs::read_to_string("./src.clj").expect("Could not read file.");
@@ -230,7 +281,12 @@ fn main() {
     //     println!("{} {}", id, sexp);
     // }
 
-    eval(&ast, 0);
+    let mut pc: usize = 0;
+    let mut env = ENV::new();
+    while pc < ast.items.len() {
+        pc = eval(&ast, &mut env, pc) + 1;
+        println!("");
+    }
     return;
 
     let max = ast.items.len();
