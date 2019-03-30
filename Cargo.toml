@@ -1,0 +1,7 @@
+[package]
+name = "warp"
+version = "0.1.0"
+authors = ["alex"]
+edition = "2018"
+
+[dependencies]

@@ -1,0 +1,11 @@
+0 SExp { _type: "exec", children: [Symbol("define"), Reference(1), Reference(2)] }
+1 SExp { _type: "vec", children: [Symbol("math"), Symbol("a"), Symbol("b"), Symbol("c"), Symbol("d")] }
+2 SExp { _type: "exec", children: [Symbol("+"), Symbol("a"), Reference(3), Symbol("d")] }
+3 SExp { _type: "exec", children: [Symbol("-"), Symbol("b"), Symbol("c")] }
+4 SExp { _type: "exec", children: [Symbol("math"), Int(1), Int(2), Int(3), Reference(5)] }
+5 SExp { _type: "exec", children: [Symbol("math"), Int(1), Int(2), Int(3), Int(4)] }
+6 SExp { _type: "exec", children: [Symbol("if"), Reference(7), Reference(9), Reference(10)] }
+7 SExp { _type: "exec", children: [Symbol(">"), Int(4), Reference(8)] }
+8 SExp { _type: "exec", children: [Symbol("math"), Int(1), Int(2), Int(3), Int(4)] }
+9 SExp { _type: "exec", children: [Symbol("add"), Int(1), Int(2)] }
+10 SExp { _type: "exec", children: [Symbol("println"), Int(3)] }
